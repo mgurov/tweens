@@ -3,28 +3,8 @@ package tweens
 import (
 	"fmt"
 	"time"
+	"math"
 )
-
-type Sprite struct {
-	x int
-	y int
-}
-
-func (s *Sprite) SetPosition(x int, y int) {
-	s.x = x
-	s.y = y
-}
-
-func (s *Sprite) GetPosition() (x int, y int) {
-	return s.x, s.y
-}
-
-func execute(s *Scene, toSecond int, callback func(tick int)) {
-	for t := 0; t <= toSecond; t++ {
-		s.Set(time.Duration(t) * time.Second)
-		callback(t)
-	}
-}
 
 func ExampleSimplest() {
 
@@ -102,4 +82,32 @@ func ExampleZeroDuration() {
 	//0 0
 	//100 1
 	//100 1
+}
+
+func execute(s *Scene, toSecond int, callback func(tick int)) {
+	for t := 0; t <= toSecond; t++ {
+		s.Set(time.Duration(t) * time.Second)
+		callback(t)
+	}
+}
+
+type Sprite struct {
+	x int
+	y int
+}
+
+func (s *Sprite) SetPosition(x float64, y float64) {
+	s.x = round2int(x)
+	s.y = round2int(y)
+}
+
+func (s *Sprite) GetPosition() (x float64, y float64) {
+	return float64(s.x), float64(s.y)
+}
+
+func round2int(input float64) int {
+	if input < 0 {
+		return int(math.Ceil(input - 0.5))
+	}
+	return int(math.Floor(input + 0.5))
 }

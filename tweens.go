@@ -1,6 +1,5 @@
 package tweens
 import (
-	"math"
 	"time"
 )
 
@@ -24,43 +23,34 @@ type Setter interface {
 }
 
 type Movable interface {
-	SetPosition(x int, y int)
-	GetPosition() (x int, y int)
+	SetPosition(x float64, y float64)
+	GetPosition() (x float64, y float64)
 }
 
 type MoveToCmd struct {
 	subject Movable
-	funX    func(time.Duration) int
-	funY    func(time.Duration) int
+	funX    func(time.Duration) float64
+	funY    func(time.Duration) float64
 }
 
 func (m *MoveToCmd) Set(tick time.Duration) {
 	m.subject.SetPosition(m.funX(tick), m.funY(tick))
 }
 
-func MoveTo(movable Movable, x int, y int, duration time.Duration) *MoveToCmd {
+func MoveTo(movable Movable, x float64, y float64, duration time.Duration) *MoveToCmd {
 	startX, startY := movable.GetPosition()
 	return &MoveToCmd{subject: movable, funX: FromTo(startX, x, duration), funY: FromTo(startY, y, duration)}
 }
 
-// TODO: make from and to float64
-func FromTo(from int, to int, duration time.Duration) func(tick time.Duration) int {
+func FromTo(from float64, to float64, duration time.Duration) func(tick time.Duration) float64 {
 
-	return func(tick time.Duration) int {
+	return func(tick time.Duration) float64 {
 		if tick <= 0 {
 			return from
 		}
-		if tick > duration {
+		if tick >= duration {
 			return to
 		}
-		result := round2int(float64(from) + float64(tick) / float64(duration) * float64(to))
-		return result
+		return from + float64(tick) / float64(duration) * to
 	}
-}
-
-func round2int(input float64) int {
-	if input < 0 {
-		return int(math.Ceil(input - 0.5))
-	}
-	return int(math.Floor(input + 0.5))
 }

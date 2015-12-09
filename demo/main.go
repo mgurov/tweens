@@ -97,22 +97,22 @@ func drawScene() {
 
 type Box struct {
 	// location of center
-	X       float32
-	Y       float32
+	X       float64
+	Y       float64
 	// dimension
-	Width   float32
-	Height  float32
+	Width   float64
+	Height  float64
 	// color
 	R, G, B uint8
 }
 
-func (b *Box) SetPosition(x int, y int) {
-	b.X = float32(x)
-	b.Y = float32(y)
+func (b *Box) SetPosition(x float64, y float64) {
+	b.X = x
+	b.Y = y
 }
 
-func (b *Box) GetPosition() (x int, y int) {
-	return int(b.X), int(y)
+func (b *Box) GetPosition() (x float64, y float64) {
+	return b.X, b.Y
 }
 
 func (b Box) Draw() {
@@ -121,12 +121,12 @@ func (b Box) Draw() {
 	gl.Color4f(float32(b.R) / 255.0, float32(b.G) / 255.0, float32(b.B) / 255.0, 0)
 
 	gl.PushMatrix()
-	gl.Translatef(b.X, b.Y, 0)
+	gl.Translated(b.X, b.Y, 0)
 	gl.Begin(gl.QUADS)
-	gl.Vertex2f(-w2, -h2)
-	gl.Vertex2f(w2, -h2)
-	gl.Vertex2f(w2, h2)
-	gl.Vertex2f(-w2, h2)
+	gl.Vertex2d(-w2, -h2)
+	gl.Vertex2d(w2, -h2)
+	gl.Vertex2d(w2, h2)
+	gl.Vertex2d(-w2, h2)
 	gl.End()
 	gl.PopMatrix()
 }
