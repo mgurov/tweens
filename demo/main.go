@@ -57,15 +57,15 @@ func main() {
 	*/
 
 	tweensManager := tweens.Scene{}
-	tweensManager.Add(tweens.MoveTo(&box, 400, 400, 10000))
+	tweensManager.Add(tweens.MoveTo(&box, 400, 400, time.Duration(10) * time.Second))
 	//positionTween.Repeat(-1, 0)
 
 	now := time.Now()
 
 	for !window.ShouldClose() {
 		newNow := time.Now()
-		delta := newNow.Sub(now).Nanoseconds() / 1000000;
-		tweensManager.Set(int(delta))
+		delta := newNow.Sub(now);
+		tweensManager.Set(delta)
 		drawScene()
 		window.SwapBuffers()
 		glfw.PollEvents()
@@ -130,5 +130,3 @@ func (b Box) Draw() {
 	gl.End()
 	gl.PopMatrix()
 }
-
-

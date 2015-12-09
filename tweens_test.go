@@ -2,6 +2,7 @@ package tweens
 
 import (
 	"fmt"
+	"time"
 )
 
 type Sprite struct {
@@ -18,9 +19,9 @@ func (s *Sprite) GetPosition() (x int, y int) {
 	return s.x, s.y
 }
 
-func execute(s *Scene, toTick int, callback func(tick int)) {
-	for t := 0; t <= toTick; t++ {
-		s.Set(t)
+func execute(s *Scene, toSecond int, callback func(tick int)) {
+	for t := 0; t <= toSecond; t++ {
+		s.Set(time.Duration(t) * time.Second)
 		callback(t)
 	}
 }
@@ -31,7 +32,7 @@ func ExampleSimplest() {
 
 	scene := Scene{}
 
-	scene.Add(MoveTo(&s, 100, -100, 5))
+	scene.Add(MoveTo(&s, 100, -100, time.Duration(5) * time.Second))
 
 	execute(&scene, 6, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -53,7 +54,7 @@ func ExampleTinyStep() {
 
 	scene := Scene{}
 
-	scene.Add(MoveTo(&s, 100, 1, 4))
+	scene.Add(MoveTo(&s, 100, 1, time.Duration(4) * time.Second))
 
 	execute(&scene, 6, func(tick int) {
 		fmt.Println(s.x, s.y)

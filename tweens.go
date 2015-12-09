@@ -1,6 +1,7 @@
 package tweens
 import (
 	"math"
+	"time"
 )
 
 type Scene struct {
@@ -12,14 +13,14 @@ func (s *Scene) Add(newSetter Setter) {
 }
 
 // Sets the timestamp
-func (s *Scene) Set(t int) {
+func (s *Scene) Set(t time.Duration) {
 	for _, m := range s.items {
 		m.Set(t)
 	}
 }
 
 type Setter interface {
-	Set(tick int)
+	Set(tick time.Duration)
 }
 
 type Movable interface {
@@ -29,28 +30,28 @@ type Movable interface {
 
 type MoveToCmd struct {
 	subject Movable
-	funX    func(int) int
-	funY    func(int) int
+	funX    func(time.Duration) int
+	funY    func(time.Duration) int
 }
 
-func (m *MoveToCmd) Set(tick int) {
+func (m *MoveToCmd) Set(tick time.Duration) {
 	m.subject.SetPosition(m.funX(tick), m.funY(tick))
 }
 
-func MoveTo(movable Movable, x int, y int, duration int) *MoveToCmd {
+func MoveTo(movable Movable, x int, y int, duration time.Duration) *MoveToCmd {
 	startX, startY := movable.GetPosition()
 	return &MoveToCmd{subject: movable, funX: FromTo(startX, x, duration), funY: FromTo(startY, y, duration)}
 }
 
-func FromTo(from int, to int, duration int) func(tick int) int {
+func FromTo(from int, to int, duration time.Duration) func(tick time.Duration) int {
 
-	delta := float64(to - from) / float64(duration) //TODO: division by zero
+	//delta := float64(to - from) / float64(duration) //TODO: division by zero
 
-	return func(tick int) int {
+	return func(tick time.Duration) int {
 		if tick > duration {
 			return to
 		}
-		result := round2int(float64(from) + delta * float64(tick))
+		result := round2int(float64(from) + float64(tick) / float64(duration) * float64(to))
 		return result
 	}
 }
