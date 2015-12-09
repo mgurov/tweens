@@ -69,3 +69,37 @@ func ExampleTinyStep() {
 	//100 1
 	//100 1
 }
+
+func ExampleNegativeStepsIgnored() {
+
+	s := Sprite{0, 0}
+
+	scene := Scene{}
+
+	scene.Add(MoveTo(&s, 100, 1, time.Duration(4) * time.Second))
+
+	scene.Set(time.Duration(-1) * time.Second)
+
+	fmt.Println(s.x, s.y)
+
+	// Output:
+	//0 0
+}
+
+func ExampleZeroDuration() {
+
+	s := Sprite{0, 0}
+
+	scene := Scene{}
+
+	scene.Add(MoveTo(&s, 100, 1, time.Duration(0)))
+
+	execute(&scene, 2, func(tick int) {
+		fmt.Println(s.x, s.y)
+	})
+
+	// Output:
+	//0 0
+	//100 1
+	//100 1
+}

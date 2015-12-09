@@ -43,11 +43,13 @@ func MoveTo(movable Movable, x int, y int, duration time.Duration) *MoveToCmd {
 	return &MoveToCmd{subject: movable, funX: FromTo(startX, x, duration), funY: FromTo(startY, y, duration)}
 }
 
+// TODO: make from and to float64
 func FromTo(from int, to int, duration time.Duration) func(tick time.Duration) int {
 
-	//delta := float64(to - from) / float64(duration) //TODO: division by zero
-
 	return func(tick time.Duration) int {
+		if tick <= 0 {
+			return from
+		}
 		if tick > duration {
 			return to
 		}
