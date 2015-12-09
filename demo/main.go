@@ -7,24 +7,14 @@ import (
 	"github.com/go-gl/glfw/v3.1/glfw"
 
 	"github.com/mgurov/tweens"
-	"log"
 	"time"
 )
-
-var _ log.Logger
 
 const (
 	Title = "Tween demo"
 	Width = 400
 	Height = 400
 )
-
-const (
-	memory = iota
-	tweenSize
-	tweenPosition
-)
-
 
 func main() {
 	if err := glfw.Init(); err != nil {
