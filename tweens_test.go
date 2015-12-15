@@ -12,7 +12,7 @@ func ExampleSimplest() {
 
 	scene := Scene{}
 
-	scene.Add(MoveTo(&s, 100, -100, time.Duration(5) * time.Second))
+	scene.Add(MoveTo(&s, 100, -100, time.Duration(5) * time.Second, Linear))
 
 	execute(&scene, 6, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -34,7 +34,7 @@ func ExampleTinyStep() {
 
 	scene := Scene{}
 
-	scene.Add(MoveTo(&s, 100, 1, time.Duration(4) * time.Second))
+	scene.Add(MoveTo(&s, 100, 1, time.Duration(4) * time.Second, Linear))
 
 	execute(&scene, 6, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -56,7 +56,7 @@ func ExampleNegativeStepsIgnored() {
 
 	scene := Scene{}
 
-	scene.Add(MoveTo(&s, 100, 1, time.Duration(4) * time.Second))
+	scene.Add(MoveTo(&s, 100, 1, time.Duration(4) * time.Second, Linear))
 
 	scene.Set(time.Duration(-1) * time.Second)
 
@@ -72,7 +72,7 @@ func ExampleZeroDuration() {
 
 	scene := Scene{}
 
-	scene.Add(MoveTo(&s, 100, 1, time.Duration(0)))
+	scene.Add(MoveTo(&s, 100, 1, time.Duration(0), Linear))
 
 	execute(&scene, 2, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -83,6 +83,29 @@ func ExampleZeroDuration() {
 	//100 1
 	//100 1
 }
+
+func ExampleEaseInQuad() {
+
+	s := Sprite{0, 0}
+
+	scene := Scene{}
+
+	scene.Add(MoveTo(&s, 100, -100, time.Duration(5) * time.Second, EaseInQuad))
+
+	execute(&scene, 6, func(tick int) {
+		fmt.Println(s.x, s.y)
+	})
+
+	// Output:
+	//0 0
+	//4 -4
+	//16 -16
+	//36 -36
+	//64 -64
+	//100 -100
+	//100 -100
+}
+
 
 func execute(s *Scene, toSecond int, callback func(tick int)) {
 	for t := 0; t <= toSecond; t++ {

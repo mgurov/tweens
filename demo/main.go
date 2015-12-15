@@ -47,7 +47,7 @@ func main() {
 	*/
 
 	tweensManager := tweens.Scene{}
-	tweensManager.Add(tweens.MoveTo(&box, 400, 400, time.Duration(10) * time.Second))
+	tweensManager.Add(tweens.MoveTo(&box, 400, 400, time.Duration(10) * time.Second, tweens.EaseInOutBounce))
 	//positionTween.Repeat(-1, 0)
 
 	now := time.Now()

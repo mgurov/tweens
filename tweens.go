@@ -37,12 +37,12 @@ func (m *MoveToCmd) Set(tick time.Duration) {
 	m.subject.SetPosition(m.funX(tick), m.funY(tick))
 }
 
-func MoveTo(movable Movable, x float64, y float64, duration time.Duration) *MoveToCmd {
+func MoveTo(movable Movable, x float64, y float64, duration time.Duration, easing Easing) *MoveToCmd {
 	startX, startY := movable.GetPosition()
-	return &MoveToCmd{subject: movable, funX: FromTo(startX, x, duration), funY: FromTo(startY, y, duration)}
+	return &MoveToCmd{subject: movable, funX: FromTo(startX, x, duration, easing), funY: FromTo(startY, y, duration, easing)}
 }
 
-func FromTo(from float64, to float64, duration time.Duration) func(tick time.Duration) float64 {
+func FromTo(from float64, to float64, duration time.Duration, easing Easing) func(tick time.Duration) float64 {
 
 	return func(tick time.Duration) float64 {
 		if tick <= 0 {
@@ -51,6 +51,7 @@ func FromTo(from float64, to float64, duration time.Duration) func(tick time.Dur
 		if tick >= duration {
 			return to
 		}
-		return from + float64(tick) / float64(duration) * to
+		completed := float64(tick) / float64(duration)
+		return from + easing(completed) * to
 	}
 }
