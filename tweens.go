@@ -1,6 +1,7 @@
 package tweens
 import (
 	"time"
+	"math"
 )
 
 type Scene struct {
@@ -38,20 +39,50 @@ func (m *MoveToCmd) Set(tick time.Duration) {
 }
 
 func MoveTo(movable Movable, x float64, y float64, duration time.Duration, easing Easing) *MoveToCmd {
-	startX, startY := movable.GetPosition()
-	return &MoveToCmd{subject: movable, funX: FromTo(startX, x, duration, easing), funY: FromTo(startY, y, duration, easing)}
+	return MoveToRepeat(movable, x, y, duration, easing, Once)
 }
 
-func FromTo(from float64, to float64, duration time.Duration, easing Easing) func(tick time.Duration) float64 {
+func MoveToRepeat(movable Movable, x float64, y float64, duration time.Duration, easing Easing, repeat Lifespan) *MoveToCmd {
+	startX, startY := movable.GetPosition()
+	return &MoveToCmd{subject: movable, funX: FromTo(startX, x, duration, easing, repeat), funY: FromTo(startY, y, duration, easing, repeat)}
+}
+
+func FromTo(from float64, to float64, duration time.Duration, easing Easing, lifespan Lifespan) func(tick time.Duration) float64 {
 
 	return func(tick time.Duration) float64 {
 		if tick <= 0 {
 			return from
 		}
-		if tick >= duration {
-			return to
-		}
 		completed := float64(tick) / float64(duration)
-		return from + easing(completed) * to
+
+		return from + easing(lifespan(completed)) * to
+	}
+}
+
+type Lifespan func (in float64) float64
+
+func Once (in float64) float64 {
+	if in > 1 {
+		return 1
+	} else {
+		return in
+	}
+}
+
+func Repeat (in float64) float64 {
+	_,fraction := math.Modf(in)
+	if 0 == fraction {
+		return 1
+	} else {
+		return fraction
+	}
+}
+
+func YoYo (in float64) float64 {
+	whole,fraction := math.Modf(in)
+	if 0 == (int)(whole) % 2 {
+		return fraction
+	} else {
+		return 1 - fraction
 	}
 }

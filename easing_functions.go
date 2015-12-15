@@ -14,6 +14,10 @@ func EaseInQuad(completed float64) float64 {
 	return math.Pow(completed, 2)
 }
 
+func EaseOutQuad(completed float64) float64 {
+	return 1- math.Pow(1 - completed, 2)
+}
+
 
 // EaseInOutBounce eases in and out a Bounce transition.
 // See http://jqueryui.com/easing/ for curve in action.

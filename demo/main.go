@@ -47,8 +47,9 @@ func main() {
 	*/
 
 	tweensManager := tweens.Scene{}
-	tweensManager.Add(tweens.MoveTo(&box, 400, 400, time.Duration(10) * time.Second, tweens.EaseInOutBounce))
-	//positionTween.Repeat(-1, 0)
+	tweensManager.Add(tweens.MoveTo(&onceBox, 400, 400, time.Duration(10) * time.Second, tweens.EaseInOutBounce))
+	tweensManager.Add(tweens.MoveToRepeat(&repeatBox, 0, 200, time.Duration(3) * time.Second, tweens.EaseOutQuad, tweens.Repeat))
+	tweensManager.Add(tweens.MoveToRepeat(&yoyoBox, 200, 0, time.Duration(3) * time.Second, tweens.EaseInQuad, tweens.YoYo))
 
 	now := time.Now()
 
@@ -62,7 +63,9 @@ func main() {
 	}
 }
 
-var box Box = Box{X: 0.0, Y: 0.0, Width: 10, Height: 10, R: 0, G: 255, B: 255}
+var onceBox Box = Box{X: 0.0, Y: 0.0, Width: 10, Height: 10, R: 0, G: 255, B: 255}
+var repeatBox Box = Box{X: 200.0, Y: 0.0, Width: 10, Height: 10, R: 255, G: 0, B: 0}
+var yoyoBox Box = Box{X: 0.0, Y: 200.0, Width: 10, Height: 10, R: 100, G: 255, B: 0}
 
 func initScene() {
 
@@ -82,7 +85,9 @@ func drawScene() {
 	gl.ClearColor(0.0, 0.0, 0.0, 0)
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 
-	box.Draw()
+	onceBox.Draw()
+	repeatBox.Draw()
+	yoyoBox.Draw()
 }
 
 type Box struct {

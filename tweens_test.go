@@ -106,6 +106,59 @@ func ExampleEaseInQuad() {
 	//100 -100
 }
 
+func ExampleRepeat() {
+
+	s := Sprite{0, 0}
+
+	scene := Scene{}
+
+	scene.Add(MoveToRepeat(&s, 100, -100, time.Duration(5) * time.Second, Linear, Repeat))
+
+	execute(&scene, 11, func(tick int) {
+		fmt.Println(s.x, s.y)
+	})
+
+	// Output:
+	//0 0
+	//20 -20
+	//40 -40
+	//60 -60
+	//80 -80
+	//100 -100
+	//20 -20
+	//40 -40
+	//60 -60
+	//80 -80
+	//100 -100
+	//20 -20
+}
+
+func ExampleYoYo() {
+
+	s := Sprite{0, 0}
+
+	scene := Scene{}
+
+	scene.Add(MoveToRepeat(&s, 100, -100, time.Duration(5) * time.Second, Linear, YoYo))
+
+	execute(&scene, 11, func(tick int) {
+		fmt.Println(s.x, s.y)
+	})
+
+	// Output:
+	//0 0
+	//20 -20
+	//40 -40
+	//60 -60
+	//80 -80
+	//100 -100
+	//80 -80
+	//60 -60
+	//40 -40
+	//20 -20
+	//0 0
+	//20 -20
+}
 
 func execute(s *Scene, toSecond int, callback func(tick int)) {
 	for t := 0; t <= toSecond; t++ {
