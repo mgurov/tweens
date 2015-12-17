@@ -8,6 +8,10 @@ type Scene struct {
 	items []Setter
 }
 
+func (s *Scene) AddTransition(what ChangeFunction, how How) {
+	s.Add(&transition{setterFunctions: []ChangeFunction{what}, tickNormalizer: how.tickNormalizationFun()})
+}
+
 func (s *Scene) Add(newSetter Setter) {
 	s.items = append(s.items, newSetter)
 }
@@ -23,66 +27,45 @@ type Setter interface {
 	Set(tick time.Duration)
 }
 
-type Movable interface {
-	SetPosition(x float64, y float64)
-	GetPosition() (x float64, y float64)
+type ChangeFunction func(complete float64)
+type TickNormalizationFunction func(tick time.Duration) float64
+
+type How struct {
+	Duration   time.Duration
+	Easing     Easing
+	Repetition Lifespan
 }
 
-type MoveToCmd struct {
-	subject Movable
-	funX    func(time.Duration) float64
-	funY    func(time.Duration) float64
-}
+func (t How) tickNormalizationFun() TickNormalizationFunction {
+	if nil == t.Easing {
+		t.Easing = Linear
+	}
 
-func (m *MoveToCmd) Set(tick time.Duration) {
-	m.subject.SetPosition(m.funX(tick), m.funY(tick))
-}
-
-func MoveTo(movable Movable, x float64, y float64, duration time.Duration, easing Easing) *MoveToCmd {
-	return MoveToRepeat(movable, x, y, duration, easing, Once)
-}
-
-func MoveToRepeat(movable Movable, x float64, y float64, duration time.Duration, easing Easing, repeat Lifespan) *MoveToCmd {
-	startX, startY := movable.GetPosition()
-	return &MoveToCmd{subject: movable, funX: FromTo(startX, x, duration, easing, repeat), funY: FromTo(startY, y, duration, easing, repeat)}
-}
-
-func FromTo(from float64, to float64, duration time.Duration, easing Easing, lifespan Lifespan) func(tick time.Duration) float64 {
+	if nil == t.Repetition {
+		t.Repetition = Once
+	}
 
 	return func(tick time.Duration) float64 {
-		if tick <= 0 {
-			return from
+		var completed float64
+		if (tick <= 0) {
+			//shift tyniest bit to make downstream functions happier. Kind of a special case, although might need rethinking.
+			completed = math.Nextafter(0, 1)
+		} else {
+			completed = float64(tick) / float64(t.Duration)
 		}
-		completed := float64(tick) / float64(duration)
 
-		return from + easing(lifespan(completed)) * to
+		return t.Easing(t.Repetition(completed))
 	}
 }
 
-type Lifespan func (in float64) float64
-
-func Once (in float64) float64 {
-	if in > 1 {
-		return 1
-	} else {
-		return in
-	}
+type transition struct {
+	setterFunctions []ChangeFunction //TODO: I wonder whether how would it work with pointers and whether it would make any sense
+	tickNormalizer  TickNormalizationFunction
 }
 
-func Repeat (in float64) float64 {
-	_,fraction := math.Modf(in)
-	if 0 == fraction {
-		return 1
-	} else {
-		return fraction
-	}
-}
-
-func YoYo (in float64) float64 {
-	whole,fraction := math.Modf(in)
-	if 0 == (int)(whole) % 2 {
-		return fraction
-	} else {
-		return 1 - fraction
+func (fs *transition) Set(tick time.Duration) {
+	normalized := fs.tickNormalizer(tick)
+	for _, fun := range fs.setterFunctions {
+		fun(normalized)
 	}
 }

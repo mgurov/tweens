@@ -1,9 +1,10 @@
-package tweens
+package tweens_test
 
 import (
 	"fmt"
 	"time"
 	"math"
+	. "github.com/mgurov/tweens"
 )
 
 func ExampleSimplest() {
@@ -12,7 +13,7 @@ func ExampleSimplest() {
 
 	scene := Scene{}
 
-	scene.Add(MoveTo(&s, 100, -100, time.Duration(5) * time.Second, Linear))
+	scene.AddTransition(MoveTo2(&s, 100, -100), How{Duration: time.Duration(5) * time.Second})
 
 	execute(&scene, 6, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -34,7 +35,7 @@ func ExampleTinyStep() {
 
 	scene := Scene{}
 
-	scene.Add(MoveTo(&s, 100, 1, time.Duration(4) * time.Second, Linear))
+	scene.AddTransition(MoveTo2(&s, 100, 1), How{Duration: time.Duration(4) * time.Second})
 
 	execute(&scene, 6, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -56,7 +57,7 @@ func ExampleNegativeStepsIgnored() {
 
 	scene := Scene{}
 
-	scene.Add(MoveTo(&s, 100, 1, time.Duration(4) * time.Second, Linear))
+	scene.AddTransition(MoveTo2(&s, 100, 1), How{Duration: time.Duration(4) * time.Second})
 
 	scene.Set(time.Duration(-1) * time.Second)
 
@@ -72,7 +73,7 @@ func ExampleZeroDuration() {
 
 	scene := Scene{}
 
-	scene.Add(MoveTo(&s, 100, 1, time.Duration(0), Linear))
+	scene.AddTransition(MoveTo2(&s, 100, 1), How{Duration: time.Duration(0)})
 
 	execute(&scene, 2, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -90,7 +91,7 @@ func ExampleEaseInQuad() {
 
 	scene := Scene{}
 
-	scene.Add(MoveTo(&s, 100, -100, time.Duration(5) * time.Second, EaseInQuad))
+	scene.AddTransition(MoveTo2(&s, 100, -100), How{Duration: time.Duration(5) * time.Second, Easing: EaseInQuad})
 
 	execute(&scene, 6, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -112,7 +113,7 @@ func ExampleRepeat() {
 
 	scene := Scene{}
 
-	scene.Add(MoveToRepeat(&s, 100, -100, time.Duration(5) * time.Second, Linear, Repeat))
+	scene.AddTransition(MoveTo2(&s, 100, -100), How{Duration:time.Duration(5) * time.Second, Repetition: Repeat})
 
 	execute(&scene, 11, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -139,7 +140,7 @@ func ExampleYoYo() {
 
 	scene := Scene{}
 
-	scene.Add(MoveToRepeat(&s, 100, -100, time.Duration(5) * time.Second, Linear, YoYo))
+	scene.AddTransition(MoveTo2(&s, 100, -100), How{Duration: time.Duration(5) * time.Second, Repetition: YoYo})
 
 	execute(&scene, 11, func(tick int) {
 		fmt.Println(s.x, s.y)

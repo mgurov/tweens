@@ -39,17 +39,10 @@ func main() {
 
 	runtime.LockOSThread()
 
-	/*
-		sizeTween := tween.ToAccessor(&box, &ResizeBox{tweenSize}, 5).Target2(100, 50)
-		//TODO: why didn't chaining work?
-		sizeTween.RepeatYoyo(-1, 0)
-		sizeTween.Start()
-	*/
-
 	tweensManager := tweens.Scene{}
-	tweensManager.Add(tweens.MoveTo(&onceBox, 400, 400, time.Duration(10) * time.Second, tweens.EaseInOutBounce))
-	tweensManager.Add(tweens.MoveToRepeat(&repeatBox, 0, 200, time.Duration(3) * time.Second, tweens.EaseOutQuad, tweens.Repeat))
-	tweensManager.Add(tweens.MoveToRepeat(&yoyoBox, 200, 0, time.Duration(3) * time.Second, tweens.EaseInQuad, tweens.YoYo))
+	tweensManager.AddTransition(tweens.MoveTo2(&onceBox, 400, 400), tweens.How{time.Duration(10) * time.Second, tweens.EaseInOutBounce, tweens.Once})
+	tweensManager.AddTransition(tweens.MoveTo2(&repeatBox, 0, 200), tweens.How{time.Duration(3) * time.Second, tweens.EaseOutQuad, tweens.Repeat})
+	tweensManager.AddTransition(tweens.MoveTo2(&yoyoBox, 200, 0), tweens.How{time.Duration(3) * time.Second, tweens.EaseInQuad, tweens.YoYo})
 
 	now := time.Now()
 
