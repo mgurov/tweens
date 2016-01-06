@@ -1,4 +1,5 @@
 package tweens
+
 import "math"
 
 // Lifespan defines the behavior of the transformation beyond the base duration, e.g. repeat, yoyo.
@@ -23,7 +24,7 @@ func Repeat(in float64) float64 {
 
 func YoYo(in float64) float64 {
 	whole, fraction := math.Modf(in)
-	if 0 == (int)(whole) % 2 {
+	if 0 == (int)(whole)%2 {
 		return fraction
 	} else {
 		return 1 - fraction

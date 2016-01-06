@@ -12,8 +12,8 @@ func MoveTo2(movable Movable, x float64, y float64) ChangeFunction {
 
 	return func(progress float64) {
 		movable.SetPosition(
-			startX + progress * deltaX,
-			startY + progress * deltaY,
+			startX+progress*deltaX,
+			startY+progress*deltaY,
 		)
 	}
 }

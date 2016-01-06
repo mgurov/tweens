@@ -1,7 +1,8 @@
 package tweens
+
 import (
-	"time"
 	"math"
+	"time"
 )
 
 type Scene struct {
@@ -47,7 +48,7 @@ func (t How) tickNormalizationFun() TickNormalizationFunction {
 
 	return func(tick time.Duration) float64 {
 		var completed float64
-		if (tick <= 0) {
+		if tick <= 0 {
 			//shift tyniest bit to make downstream functions happier. Kind of a special case, although might need rethinking.
 			completed = math.Nextafter(0, 1)
 		} else {

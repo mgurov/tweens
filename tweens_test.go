@@ -2,9 +2,9 @@ package tweens_test
 
 import (
 	"fmt"
-	"time"
-	"math"
 	. "github.com/mgurov/tweens"
+	"math"
+	"time"
 )
 
 func ExampleSimplest() {
@@ -113,7 +113,7 @@ func ExampleRepeat() {
 
 	scene := Scene{}
 
-	scene.AddTransition(MoveTo2(&s, 100, -100), How{Duration:time.Duration(5) * time.Second, Repetition: Repeat})
+	scene.AddTransition(MoveTo2(&s, 100, -100), How{Duration: time.Duration(5) * time.Second, Repetition: Repeat})
 
 	execute(&scene, 11, func(tick int) {
 		fmt.Println(s.x, s.y)
