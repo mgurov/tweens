@@ -5,6 +5,7 @@ import (
 	. "github.com/mgurov/tweens"
 	"math"
 	"time"
+	"testing"
 )
 
 func ExampleSimplest() {
@@ -159,6 +160,164 @@ func ExampleYoYo() {
 	//20 -20
 	//0 0
 	//20 -20
+}
+
+func ExampleSequence() {
+
+	s := Sprite{0, 0}
+
+	scene := Scene{}
+
+	sequence := Sequence{
+		[]Step{
+			Step{What: func() ChangeFunction {return MoveTo2(&s, 100, -100)}, Duration: time.Duration(5) * time.Second},
+			Step{What: func() ChangeFunction {return MoveTo2(&s, -100, 100)}, Duration: time.Duration(10) * time.Second},
+		},
+	}
+
+	scene.Add(sequence.Once())
+
+	execute(&scene, 17, func(tick int) {
+		fmt.Println(s.x, s.y)
+	})
+
+	// Output:
+	//0 0
+	//20 -20
+	//40 -40
+	//60 -60
+	//80 -80
+	//100 -100
+	//80 -80
+	//60 -60
+	//40 -40
+	//20 -20
+	//0 0
+	//-20 20
+	//-40 40
+	//-60 60
+	//-80 80
+	//-100 100
+	//-100 100
+	//-100 100
+}
+
+func ExampleRepeatSequence() {
+
+	s := Sprite{0, 0}
+
+	scene := Scene{}
+
+	sequence := Sequence{
+		[]Step{
+			Step{What: func() ChangeFunction {return MoveTo2(&s, 100, -100)}, Duration: 2 * time.Second},
+			Step{What: func() ChangeFunction {return MoveTo2(&s, -100, -200)}, Duration: 4 * time.Second},
+		},
+	}
+
+	scene.Add(sequence.Build(Repeat))
+
+	execute(&scene, 10, func(tick int) {
+		fmt.Println(s.x, s.y)
+	})
+
+	// Output:
+	//0 0
+	//50 -50
+	//100 -100
+	//50 -125
+	//0 -150
+	//-50 -175
+	//-100 -200
+	//50 -50
+	//100 -100
+	//50 -125
+	//0 -150
+}
+
+func ExampleYoYoSequence() {
+
+	s := Sprite{0, 0}
+
+	scene := Scene{}
+
+	//TODO: repeat and such on the sequence.
+	sequence := Sequence{
+		[]Step{
+			Step{What: func() ChangeFunction {return MoveTo2(&s, 100, -100)}, Duration: 1 * time.Second},
+			Step{What: func() ChangeFunction {return MoveTo2(&s, -100, -200)}, Duration: 2 * time.Second},
+		},
+	}
+
+	scene.Add(sequence.Build(YoYo))
+
+	execute(&scene, 10, func(tick int) {
+		fmt.Println(s.x, s.y)
+	})
+
+	// Output:
+	//0 0
+	//100 -100
+	//0 -150
+	//-100 -200
+	//0 -150
+	//100 -100
+	//0 0
+	//100 -100
+	//0 -150
+	//-100 -200
+	//0 -150
+}
+
+func ExampleSequenceWithStepEasing() {
+
+	s := Sprite{0, 0}
+
+	scene := Scene{}
+
+	//TODO: repeat and such on the sequence.
+	sequence := Sequence{
+		[]Step{
+			Step{What: func() ChangeFunction {return MoveTo2(&s, 100, -100)}, Duration: time.Duration(5) * time.Second, Easing: EaseInQuad},
+			Step{What: func() ChangeFunction {return MoveTo2(&s, -100, 100)}, Duration: time.Duration(10) * time.Second},
+		},
+	}
+
+	scene.Add(sequence.Once())
+
+	execute(&scene, 16, func(tick int) {
+		fmt.Println(s.x, s.y)
+	})
+
+	// Output:
+	//0 0
+	//4 -4
+	//16 -16
+	//36 -36
+	//64 -64
+	//100 -100
+	//80 -80
+	//60 -60
+	//40 -40
+	//20 -20
+	//0 0
+	//-20 20
+	//-40 40
+	//-60 60
+	//-80 80
+	//-100 100
+	//-100 100
+}
+
+func TestEmptySequence(t *testing.T) {
+
+	scene := Scene{}
+
+	setter := (&Sequence{}).Once()
+
+	scene.Add(setter)
+
+	scene.Set(1 * time.Second)
 }
 
 func execute(s *Scene, toSecond int, callback func(tick int)) {

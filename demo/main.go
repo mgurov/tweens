@@ -44,6 +44,23 @@ func main() {
 	tweensManager.AddTransition(tweens.MoveTo2(&repeatBox, 0, 200), tweens.How{time.Duration(3) * time.Second, tweens.EaseOutQuad, tweens.Repeat})
 	tweensManager.AddTransition(tweens.MoveTo2(&yoyoBox, 200, 0), tweens.How{time.Duration(3) * time.Second, tweens.EaseInQuad, tweens.YoYo})
 
+	tweensManager.Add((&tweens.Sequence{
+		[]tweens.Step{
+			//TODO: make What lazy
+			tweens.Step{What: func() tweens.ChangeFunction {return tweens.MoveTo2(&wayPointsBox, 200, 200)}, Duration: 3 * time.Second},
+			tweens.Step{What: func() tweens.ChangeFunction {return tweens.MoveTo2(&wayPointsBox, 200, 0)}, Duration: 2 * time.Second},
+			tweens.Step{What: func() tweens.ChangeFunction {return tweens.MoveTo2(&wayPointsBox, 0, 200)}, Duration: 1 * time.Second},
+		},
+	}).Build(tweens.Repeat))
+
+	tweensManager.Add((&tweens.Sequence{
+		[]tweens.Step{
+			//TODO: make What lazy
+			tweens.Step{What: func() tweens.ChangeFunction {return directToAngle(&arrow, -180)}, Duration: 2 * time.Second, Easing: tweens.EaseOutBounce},
+			tweens.Step{What: func() tweens.ChangeFunction {return directToAngle(&arrow, 0)}, Duration: 2 * time.Second},
+		},
+	}).Build(tweens.Repeat))
+
 	now := time.Now()
 
 	for !window.ShouldClose() {
@@ -59,6 +76,8 @@ func main() {
 var onceBox Box = Box{X: 0.0, Y: 0.0, Width: 10, Height: 10, R: 0, G: 255, B: 255}
 var repeatBox Box = Box{X: 200.0, Y: 0.0, Width: 10, Height: 10, R: 255, G: 0, B: 0}
 var yoyoBox Box = Box{X: 0.0, Y: 200.0, Width: 10, Height: 10, R: 100, G: 255, B: 0}
+var wayPointsBox Box = Box{X: 0.0, Y: 200.0, Width: 10, Height: 10, R: 128, G: 128, B: 0}
+var arrow Arrow = Arrow{Box: Box{X: 150.0, Y: 150.0, Width: 200, Height: 50, R: 255, G: 128, B: 0}}
 
 func initScene() {
 
@@ -81,6 +100,8 @@ func drawScene() {
 	onceBox.Draw()
 	repeatBox.Draw()
 	yoyoBox.Draw()
+	wayPointsBox.Draw()
+	arrow.Draw()
 }
 
 type Box struct {
@@ -117,4 +138,36 @@ func (b Box) Draw() {
 	gl.Vertex2d(-w2, h2)
 	gl.End()
 	gl.PopMatrix()
+}
+
+type Arrow struct {
+	Box
+
+	Angle float64
+}
+
+func (a Arrow) Draw() {
+	w2 := a.Width / 2
+	h2 := a.Height / 2
+	gl.Color4f(float32(a.R) / 255.0, float32(a.G) / 255.0, float32(a.B) / 255.0, 0)
+
+	gl.PushMatrix()
+	gl.Translated(a.X, a.Y, 0)
+	gl.Rotated(a.Angle, 0.0, 0.0, 1.0)
+	gl.Begin(gl.TRIANGLES)
+
+	gl.Vertex2d(w2, 0)
+	gl.Vertex2d(-w2, h2)
+	gl.Vertex2d(-w2, -h2)
+
+	gl.End()
+	gl.PopMatrix()
+}
+
+func directToAngle(arr *Arrow, targetAngle float64) tweens.ChangeFunction {
+	start := arr.Angle
+	delta := targetAngle - start
+	return func(complete float64) {
+		arr.Angle = start + delta * complete
+	}
 }
