@@ -1,15 +1,22 @@
 package tweens
+
 import (
-	"time"
 	"math"
+	"time"
 )
 
 type Sequence struct {
-	Steps [] Step
+	Steps []Step
+}
+
+func NewSequence(steps ...Step) *Sequence {
+	return &Sequence{
+		Steps: steps,
+	}
 }
 
 type Step struct {
-	What     func() ChangeFunction
+	What     Transition
 	Duration time.Duration
 	Easing   Easing
 }
@@ -22,26 +29,34 @@ type timeLine struct {
 }
 
 type timeSlot struct {
-	start        time.Duration
-	stop         time.Duration
-	duration     time.Duration
-	whatProvider func() ChangeFunction
-	what         ChangeFunction
-	easing       Easing
+	start    time.Duration
+	stop     time.Duration
+	duration time.Duration
+	change   Transition
+	what     TransitionCompletionFunction //TODO: this way we cache the transition, but what if I want to do new every time? Stacking or something?
+	easing   Easing
+}
+
+func (t *timeSlot) covers(tick time.Duration) bool {
+	return t.start <= tick && t.stop >= tick
 }
 
 //TODO: naming
-func (s *timeSlot) getOrMakeWhat() ChangeFunction {
+func (s *timeSlot) getOrMakeWhat() TransitionCompletionFunction {
 	if s.what == nil {
-		s.what = s.whatProvider()
+		s.what = s.change.Start()
 	}
 	return s.what
 }
 
-func (s *timeLine) Set(tick time.Duration) {
+func (s *timeLine) Progress(tick time.Duration) {
+
+	if tick < 0 {
+		return
+	}
 
 	//TODO: make sane
-	if tick > s.duration {
+	if tick > s.duration && s.duration > 0 {
 		ratio := s.lifespan(float64(tick) / float64(s.duration))
 		tick = time.Duration(float64(s.duration) * s.lifespan(ratio))
 	}
@@ -64,42 +79,62 @@ func (s *timeLine) Set(tick time.Duration) {
 }
 
 func (s *timeLine) findChangeFunction(tick time.Duration) *timeSlot {
-	for i, slot := range s.timeSlots {
-		if slot.start <= tick && slot.stop >= tick {
-			//first complete the continuum for all the previous steps just in case we weren't thorough enough with updating them
-			//TODO: ranges maybe?
-			if i > s.currentStepIndex {
-				if s.currentStepIndex < 0 {
-					s.currentStepIndex = 0
-				}
-				for r := s.currentStepIndex; r < i; r++ {
-					s.timeSlots[r].getOrMakeWhat()(1)
-				}
-			} else if i < s.currentStepIndex {
-				if s.currentStepIndex >= len(s.timeSlots) {
-					s.currentStepIndex = len(s.timeSlots) - 1
-				}
-				for r := i + 1; r <= s.currentStepIndex; r++ {
-					s.timeSlots[r].getOrMakeWhat()(0)
-				}
-			}
-			s.currentStepIndex = i
+
+	beforeStart := s.currentStepIndex < 0
+	afterEnd := s.currentStepIndex > len(s.timeSlots)
+
+	var ascending bool
+
+	if beforeStart || afterEnd {
+		ascending = beforeStart || tick > s.duration
+	} else {
+		slot := s.timeSlots[s.currentStepIndex]
+		if slot.covers(tick) {
 			return slot
 		}
+		ascending = slot.stop < tick
 	}
-	if tick > 0 {
-		s.currentStepIndex = len(s.timeSlots) + 1
+
+	if ascending {
+		if beforeStart {
+			s.currentStepIndex = 0
+		}
+		for ; s.currentStepIndex < len(s.timeSlots); s.currentStepIndex++ {
+			slot := s.timeSlots[s.currentStepIndex]
+			if slot.covers(tick) {
+				return slot
+			} else {
+				slot.getOrMakeWhat()(1)
+			}
+		}
+		s.currentStepIndex++
 	} else {
-		s.currentStepIndex = -1
+		if afterEnd {
+			s.currentStepIndex = len(s.timeSlots) - 1
+		}
+		for ; s.currentStepIndex >= 0; s.currentStepIndex-- {
+			slot := s.timeSlots[s.currentStepIndex]
+			if slot.covers(tick) {
+				return slot
+			} else {
+				slot.getOrMakeWhat()(0)
+			}
+		}
+		s.currentStepIndex--
 	}
+
 	return nil
 }
 
-func (s *Sequence) Build(lifespan Lifespan) Setter {
+func (s *Sequence) Build(lifespan Lifespan) Change {
 
 	if len(s.Steps) == 0 {
 		//NOOP
 		return setter{fun: func(tick time.Duration) {}}
+	}
+
+	if nil == lifespan {
+		lifespan = Linear
 	}
 
 	//TODO: optimize
@@ -109,11 +144,11 @@ func (s *Sequence) Build(lifespan Lifespan) Setter {
 	for i, step := range s.Steps {
 		//TODO: squashing on duration 0?
 		thisTimeSlot := timeSlot{
-			start: timeCursor,
-			stop: timeCursor + step.Duration,
+			start:    timeCursor,
+			stop:     timeCursor + step.Duration,
 			duration: step.Duration,
-			whatProvider: step.What,
-			easing: step.Easing,
+			change:   step.What,
+			easing:   step.Easing,
 		}
 
 		if nil == thisTimeSlot.easing {
@@ -128,14 +163,27 @@ func (s *Sequence) Build(lifespan Lifespan) Setter {
 	return &timeLine{timeSlots: timeSlots, currentStepIndex: -1, lifespan: lifespan, duration: totalDuration}
 }
 
-func (s *Sequence) Once() Setter {
+func (s *Sequence) Once() Change {
 	return s.Build(Once)
 }
 
+//TODO: move as a helper to the tweens
 type setter struct {
 	fun func(tick time.Duration)
 }
 
-func (s setter) Set(tick time.Duration) {
+func (s setter) Progress(tick time.Duration) {
 	s.fun(tick)
+}
+
+func Pause(duration time.Duration) Step {
+	//TODO: or maybe do What by default nothing?
+	return Step{What: pause{}, Duration: duration}
+}
+
+type pause struct {
+}
+
+func (_ pause) Start() TransitionCompletionFunction {
+	return NoopCompletion
 }

@@ -39,34 +39,57 @@ func main() {
 
 	runtime.LockOSThread()
 
-	tweensManager := tweens.Scene{}
-	tweensManager.AddTransition(tweens.MoveTo2(&onceBox, 400, 400), tweens.How{time.Duration(10) * time.Second, tweens.EaseInOutBounce, tweens.Once})
-	tweensManager.AddTransition(tweens.MoveTo2(&repeatBox, 0, 200), tweens.How{time.Duration(3) * time.Second, tweens.EaseOutQuad, tweens.Repeat})
-	tweensManager.AddTransition(tweens.MoveTo2(&yoyoBox, 200, 0), tweens.How{time.Duration(3) * time.Second, tweens.EaseInQuad, tweens.YoYo})
+	scene := tweens.Scene{}
+	scene.AddTransition(onceBox.moveTo(400, 400), tweens.How{10 * time.Second, tweens.EaseInOutBounce, tweens.Once})
+	scene.AddTransition(repeatBox.moveTo(0, 200), tweens.How{3 * time.Second, tweens.EaseOutQuad, tweens.Repeat})
+	scene.AddTransition(yoyoBox.moveTo(200, 0), tweens.How{3 * time.Second, tweens.EaseInQuad, tweens.YoYo})
 
-	tweensManager.Add((&tweens.Sequence{
-		[]tweens.Step{
-			//TODO: make What lazy
-			tweens.Step{What: func() tweens.ChangeFunction {return tweens.MoveTo2(&wayPointsBox, 200, 200)}, Duration: 3 * time.Second},
-			tweens.Step{What: func() tweens.ChangeFunction {return tweens.MoveTo2(&wayPointsBox, 200, 0)}, Duration: 2 * time.Second},
-			tweens.Step{What: func() tweens.ChangeFunction {return tweens.MoveTo2(&wayPointsBox, 0, 200)}, Duration: 1 * time.Second},
-		},
-	}).Build(tweens.Repeat))
+	scene.Add(
+		tweens.NewSequence(
+			tweens.Pause(4 * time.Second),
+			tweens.Step{What: onceBox.resize(400, 400), Duration: 20 * time.Second},
+		).Build(tweens.YoYo))
 
-	tweensManager.Add((&tweens.Sequence{
-		[]tweens.Step{
-			//TODO: make What lazy
-			tweens.Step{What: func() tweens.ChangeFunction {return directToAngle(&arrow, -180)}, Duration: 2 * time.Second, Easing: tweens.EaseOutBounce},
-			tweens.Step{What: func() tweens.ChangeFunction {return directToAngle(&arrow, 0)}, Duration: 2 * time.Second},
-		},
-	}).Build(tweens.Repeat))
+	scene.Add(tweens.NewSequence(
+		tweens.Step{What: wayPointsBox.moveTo(200, 200), Duration: 3 * time.Second},
+		tweens.Step{What: wayPointsBox.moveTo(200, 0), Duration: 2 * time.Second},
+		tweens.Step{What: wayPointsBox.moveTo(0, 200), Duration: 1 * time.Second},
+	).Build(tweens.Repeat))
+
+	scene.Add(tweens.NewSequence(
+		tweens.Step{What: arrow.rotate(-180), Duration: 2 * time.Second, Easing: tweens.EaseOutBounce},
+		tweens.Step{What: arrow.rotate(0), Duration: 2 * time.Second},
+	).Build(tweens.Repeat))
+
+	arrowLegTraversalDuration := 5 * time.Second
+	scene.Add(tweens.NewSequence(
+		tweens.Step{What: arrow.moveTo(300, 150), Duration: arrowLegTraversalDuration},
+		tweens.Step{What: arrow.moveTo(300, 300), Duration: arrowLegTraversalDuration},
+		tweens.Step{What: arrow.moveTo(150, 300), Duration: arrowLegTraversalDuration},
+		tweens.Step{What: arrow.moveTo(150, 150), Duration: arrowLegTraversalDuration},
+	).Build(tweens.Repeat))
+
+	// set to true for the experimental self-propelled mode where the scene gets updated in the backrgound
+	// with a given frequence thus decoupling tweens from the GL drawing
+	// if there are advantages going this way we'll have to check the synchronization question
+	runAsync := true
+
+	if runAsync {
+		tweener := scene.RunBackground(10 * time.Millisecond)
+		go func() {
+			<-time.After(5 * time.Minute)
+			tweener <- true
+		}()
+	}
 
 	now := time.Now()
 
 	for !window.ShouldClose() {
-		newNow := time.Now()
-		delta := newNow.Sub(now);
-		tweensManager.Set(delta)
+		if (!runAsync) {
+			newNow := time.Now()
+			delta := newNow.Sub(now);
+			scene.Set(delta)
+		}
 		drawScene()
 		window.SwapBuffers()
 		glfw.PollEvents()
@@ -115,15 +138,6 @@ type Box struct {
 	R, G, B uint8
 }
 
-func (b *Box) SetPosition(x float64, y float64) {
-	b.X = x
-	b.Y = y
-}
-
-func (b *Box) GetPosition() (x float64, y float64) {
-	return b.X, b.Y
-}
-
 func (b Box) Draw() {
 	w2 := b.Width / 2
 	h2 := b.Height / 2
@@ -138,6 +152,36 @@ func (b Box) Draw() {
 	gl.Vertex2d(-w2, h2)
 	gl.End()
 	gl.PopMatrix()
+}
+
+func (b *Box) Set(position []float64) {
+	b.X = position[0]
+	b.Y = position[1]
+}
+
+func (b *Box) Get() []float64 {
+	return []float64{b.X, b.Y}
+}
+
+func (b *Box) moveTo(x, y float64) tweens.Transition {
+	return tweens.LazyAccessor(b, x, y)
+}
+
+func (b *Box) resize(w, h float64) tweens.Transition {
+	return tweens.LazyAccessor(&sizeAccessor{b}, w, h)
+}
+
+type sizeAccessor struct {
+	subject *Box
+}
+
+func (sa *sizeAccessor) Set(size []float64) {
+	sa.subject.Height = size[0]
+	sa.subject.Width = size[1]
+}
+
+func (sa *sizeAccessor) Get() []float64 {
+	return []float64{sa.subject.Width, sa.subject.Height}
 }
 
 type Arrow struct {
@@ -164,10 +208,19 @@ func (a Arrow) Draw() {
 	gl.PopMatrix()
 }
 
-func directToAngle(arr *Arrow, targetAngle float64) tweens.ChangeFunction {
-	start := arr.Angle
-	delta := targetAngle - start
-	return func(complete float64) {
-		arr.Angle = start + delta * complete
-	}
+func (a *Arrow) rotate(toAngle float64) rotator {
+	return rotator{toAngle, a}
+}
+
+type rotator struct {
+	target float64
+	angled *Arrow
+}
+
+func (r rotator) Start() tweens.TransitionCompletionFunction {
+	return tweens.FunctionalAccessor(
+		func() (currentState []float64) {return []float64{r.angled.Angle}},
+		func(newState []float64) {r.angled.Angle = newState[0]},
+		r.target,
+	)
 }

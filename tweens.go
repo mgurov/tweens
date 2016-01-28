@@ -1,75 +1,51 @@
 package tweens
 
 import (
-	"math"
 	"time"
-	_ "fmt"
-	_ "log"
 )
 
 type Scene struct {
-	items []Setter
+	changes []Change
 }
 
-func (s *Scene) AddTransition(what ChangeFunction, how How) {
-	s.Add(&transition{setterFunctions: []ChangeFunction{what}, tickNormalizer: how.tickNormalizationFun()})
+func (s *Scene) AddTransition(what Transition, how How) {
+	seq := NewSequence(Step{What: what, Duration: how.Duration, Easing: how.Easing})
+	s.Add(seq.Build(how.Repetition))
 }
 
-func (s *Scene) Add(newSetter Setter) {
-	s.items = append(s.items, newSetter)
+func (s *Scene) Add(newSetter Change) {
+	s.changes = append(s.changes, newSetter)
 }
 
 // Sets the timestamp
 func (s *Scene) Set(t time.Duration) {
-	for _, m := range s.items {
-		m.Set(t)
+	for _, m := range s.changes {
+		m.Progress(t)
 	}
 }
 
-type Setter interface {
-	Set(tick time.Duration)
+func (s *Scene) RunInfinitely(tickPrecision time.Duration) {
+	s.RunUntilStopped(tickPrecision, nil)
 }
 
-type ChangeFunction func(complete float64)
-type TickNormalizationFunction func(tick time.Duration) float64
-
-type How struct {
-	Duration   time.Duration
-	Easing     Easing
-	Repetition Lifespan
+func (s *Scene) RunBackground(tickPrecision time.Duration) (quit chan bool) {
+	quit = make(chan bool)
+	go s.RunUntilStopped(tickPrecision, quit)
+	return quit
 }
 
-func (t How) tickNormalizationFun() TickNormalizationFunction {
-
-	if nil == t.Easing {
-		t.Easing = Linear
-	}
-
-	if nil == t.Repetition {
-		t.Repetition = Once
-	}
-
-	return func(tick time.Duration) float64 {
-		var completed float64
-		if tick <= 0 {
-			//shift the tiniest bit to make downstream functions happier. Kind of a special case, although might need rethinking.
-			completed = math.Nextafter(0, 1)
-		} else {
-			completed = float64(tick) / float64(t.Duration)
+func (s *Scene) RunUntilStopped(tickPrecision time.Duration, quit chan bool) {
+	startTime := time.Now()
+	ticker := time.NewTicker(tickPrecision)
+	for {
+		select {
+		case now := <-ticker.C:
+		//TODO: report as a bug to https://github.com/go-lang-plugin-org/go-lang-idea-plugin/issues?q=is%3Aissue+label%3A%22type+inference%22+is%3Aopen
+		// I mean now := range time.Tick(precision)
+			s.Set(now.Sub(startTime))
+		case <-quit:
+			ticker.Stop()
+			return
 		}
-
-		return t.Easing(t.Repetition(completed))
-	}
-}
-
-type transition struct {
-	setterFunctions []ChangeFunction //TODO: I wonder whether how would it work with pointers and whether it would make any sense
-	tickNormalizer  TickNormalizationFunction
-}
-
-func (fs *transition) Set(tick time.Duration) {
-	normalized := fs.tickNormalizer(tick)
-	for _, fun := range fs.setterFunctions {
-		fun(normalized)
 	}
 }

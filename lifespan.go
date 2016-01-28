@@ -2,6 +2,7 @@ package tweens
 
 import "math"
 
+//TODO: rethink as per the sequences
 // Lifespan defines the behavior of the transformation beyond the base duration, e.g. repeat, yoyo.
 type Lifespan func(in float64) float64
 
