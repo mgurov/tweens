@@ -168,14 +168,12 @@ func ExampleSequence() {
 
 	scene := Scene{}
 
-	sequence := Sequence{
-		[]Step{
-			Step{What: MoveTo2(&s, 100, -100), Duration: time.Duration(5) * time.Second},
-			Step{What: MoveTo2(&s, -100, 100), Duration: time.Duration(10) * time.Second},
-		},
-	}
+	sequence := NewSequence(
+		&Step{What: MoveTo2(&s, 100, -100), Duration: time.Duration(5) * time.Second},
+		&Step{What: MoveTo2(&s, -100, 100), Duration: time.Duration(10) * time.Second},
+	)
 
-	scene.Add(sequence.Once())
+	scene.Add(sequence)
 
 	execute(&scene, 17, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -208,14 +206,12 @@ func ExampleRepeatSequence() {
 
 	scene := Scene{}
 
-	sequence := Sequence{
-		[]Step{
-			Step{What: MoveTo2(&s, 100, -100), Duration: 2 * time.Second},
-			Step{What: MoveTo2(&s, -100, -200), Duration: 4 * time.Second},
-		},
-	}
+	sequence := NewSequence(
+		&Step{What: MoveTo2(&s, 100, -100), Duration: 2 * time.Second},
+		&Step{What: MoveTo2(&s, -100, -200), Duration: 4 * time.Second},
+	)
 
-	scene.Add(sequence.Build(Repeat))
+	scene.Add(sequence.Repeat())
 
 	execute(&scene, 10, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -241,15 +237,12 @@ func ExampleYoYoSequence() {
 
 	scene := Scene{}
 
-	//TODO: repeat and such on the sequence.
-	sequence := Sequence{
-		[]Step{
-			Step{What: MoveTo2(&s, 100, -100), Duration: 1 * time.Second},
-			Step{What: MoveTo2(&s, -100, -200), Duration: 2 * time.Second},
-		},
-	}
+	sequence := NewSequence(
+		&Step{What: MoveTo2(&s, 100, -100), Duration: 1 * time.Second},
+		&Step{What: MoveTo2(&s, -100, -200), Duration: 2 * time.Second},
+	)
 
-	scene.Add(sequence.Build(YoYo))
+	scene.Add(sequence.YoYo())
 
 	execute(&scene, 10, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -276,14 +269,12 @@ func ExampleSequenceWithStepEasing() {
 	scene := Scene{}
 
 	//TODO: repeat and such on the sequence.
-	sequence := Sequence{
-		[]Step{
-			Step{What: MoveTo2(&s, 100, -100), Duration: time.Duration(5) * time.Second, Easing: EaseInQuad},
-			Step{What: MoveTo2(&s, -100, 100), Duration: time.Duration(10) * time.Second},
-		},
-	}
+	sequence := NewSequence(
+		&Step{What: MoveTo2(&s, 100, -100), Duration: time.Duration(5) * time.Second, Easing: EaseInQuad},
+		&Step{What: MoveTo2(&s, -100, 100), Duration: time.Duration(10) * time.Second},
+	)
 
-	scene.Add(sequence.Once())
+	scene.Add(sequence)
 
 	execute(&scene, 16, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -313,9 +304,7 @@ func TestEmptySequence(t *testing.T) {
 
 	scene := Scene{}
 
-	setter := (&Sequence{}).Once()
-
-	scene.Add(setter)
+	scene.Add(NewSequence())
 
 	scene.Set(1 * time.Second)
 }
@@ -328,11 +317,11 @@ func TestCoarseSequenceShouldFastForwardIntermediateSteps(t *testing.T) {
 	scene := Scene{}
 
 	sequence := NewSequence(
-		Step{What: MoveTo2(&s1, 1, 1), Duration: 500 * time.Millisecond},
-		Step{What: MoveTo2(&s2, 10, 10), Duration: 1 * time.Second},
+		&Step{What: MoveTo2(&s1, 1, 1), Duration: 500 * time.Millisecond},
+		&Step{What: MoveTo2(&s2, 10, 10), Duration: 1 * time.Second},
 	)
 
-	scene.Add(sequence.Once())
+	scene.Add(sequence)
 
 	execute(&scene, 1, func(tick int) {})
 
@@ -353,11 +342,11 @@ func TestCoarseSequenceShouldFastRewindIntermediateStepsOnYoYo(t *testing.T) {
 	scene := Scene{}
 
 	sequence := NewSequence(
-		Step{What: MoveTo2(&s1, 1, 1), Duration: 500 * time.Millisecond},
-		Step{What: MoveTo2(&s2, 10, 10), Duration: 1 * time.Second},
+		&Step{What: MoveTo2(&s1, 1, 1), Duration: 500 * time.Millisecond},
+		&Step{What: MoveTo2(&s2, 10, 10), Duration: 1 * time.Second},
 	)
 
-	scene.Add(sequence.Build(YoYo))
+	scene.Add(sequence.YoYo())
 
 	scene.Set(3000 * time.Millisecond) //first backward complete
 

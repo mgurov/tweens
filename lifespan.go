@@ -1,33 +1,35 @@
 package tweens
 
-import "math"
+import (
+	"time"
+)
 
-//TODO: rethink as per the sequences
 // Lifespan defines the behavior of the transformation beyond the base duration, e.g. repeat, yoyo.
-type Lifespan func(in float64) float64
+type Lifespan func(now time.Duration, span time.Duration) time.Duration
 
-func Once(in float64) float64 {
-	if in > 1 {
-		return 1
+func Once(now time.Duration, span time.Duration) time.Duration {
+	if now > span {
+		return span
 	} else {
-		return in
+		return now
 	}
 }
 
-func Repeat(in float64) float64 {
-	_, fraction := math.Modf(in)
-	if 0 == fraction {
-		return 1
+func Repeat(now time.Duration, span time.Duration) time.Duration {
+	reminder := now % span
+	if 0 == reminder {
+		return span
 	} else {
-		return fraction
+		return reminder
 	}
 }
 
-func YoYo(in float64) float64 {
-	whole, fraction := math.Modf(in)
-	if 0 == (int)(whole)%2 {
-		return fraction
+func YoYo(now time.Duration, span time.Duration) time.Duration {
+	reminder := now % span
+	whole := now / span
+	if 0 == whole % 2 {
+		return reminder
 	} else {
-		return 1 - fraction
+		return span - reminder
 	}
 }

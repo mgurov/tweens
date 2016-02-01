@@ -22,8 +22,6 @@ type Transition interface {
 	Start() TransitionCompletionFunction
 }
 
-type TickNormalizationFunction func(tick time.Duration) float64
-
 type How struct {
 	Duration   time.Duration
 	Easing     Easing

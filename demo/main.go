@@ -47,27 +47,27 @@ func main() {
 	scene.Add(
 		tweens.NewSequence(
 			tweens.Pause(4 * time.Second),
-			tweens.Step{What: onceBox.resize(400, 400), Duration: 20 * time.Second},
-		).Build(tweens.YoYo))
+			&tweens.Step{What: onceBox.resize(400, 400), Duration: 20 * time.Second},
+		).YoYo())
 
 	scene.Add(tweens.NewSequence(
-		tweens.Step{What: wayPointsBox.moveTo(200, 200), Duration: 3 * time.Second},
-		tweens.Step{What: wayPointsBox.moveTo(200, 0), Duration: 2 * time.Second},
-		tweens.Step{What: wayPointsBox.moveTo(0, 200), Duration: 1 * time.Second},
-	).Build(tweens.Repeat))
+		&tweens.Step{What: wayPointsBox.moveTo(200, 200), Duration: 3 * time.Second},
+		&tweens.Step{What: wayPointsBox.moveTo(200, 0), Duration: 2 * time.Second},
+		&tweens.Step{What: wayPointsBox.moveTo(0, 200), Duration: 1 * time.Second},
+	).Repeat())
 
 	scene.Add(tweens.NewSequence(
-		tweens.Step{What: arrow.rotate(-180), Duration: 2 * time.Second, Easing: tweens.EaseOutBounce},
-		tweens.Step{What: arrow.rotate(0), Duration: 2 * time.Second},
-	).Build(tweens.Repeat))
+		&tweens.Step{What: arrow.rotate(-180), Duration: 2 * time.Second, Easing: tweens.EaseOutBounce},
+		&tweens.Step{What: arrow.rotate(0), Duration: 2 * time.Second},
+	).Repeat())
 
 	arrowLegTraversalDuration := 5 * time.Second
 	scene.Add(tweens.NewSequence(
-		tweens.Step{What: arrow.moveTo(300, 150), Duration: arrowLegTraversalDuration},
-		tweens.Step{What: arrow.moveTo(300, 300), Duration: arrowLegTraversalDuration},
-		tweens.Step{What: arrow.moveTo(150, 300), Duration: arrowLegTraversalDuration},
-		tweens.Step{What: arrow.moveTo(150, 150), Duration: arrowLegTraversalDuration},
-	).Build(tweens.Repeat))
+		&tweens.Step{What: arrow.moveTo(300, 150), Duration: arrowLegTraversalDuration},
+		&tweens.Step{What: arrow.moveTo(300, 300), Duration: arrowLegTraversalDuration},
+		&tweens.Step{What: arrow.moveTo(150, 300), Duration: arrowLegTraversalDuration},
+		&tweens.Step{What: arrow.moveTo(150, 150), Duration: arrowLegTraversalDuration},
+	).Repeat())
 
 	// set to true for the experimental self-propelled mode where the scene gets updated in the backrgound
 	// with a given frequence thus decoupling tweens from the GL drawing

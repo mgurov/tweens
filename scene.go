@@ -9,8 +9,11 @@ type Scene struct {
 }
 
 func (s *Scene) AddTransition(what Transition, how How) {
-	seq := NewSequence(Step{What: what, Duration: how.Duration, Easing: how.Easing})
-	s.Add(seq.Build(how.Repetition))
+	seq := NewSequence(&Step{What: what, Duration: how.Duration, Easing: how.Easing})
+	if nil != how.Repetition {
+		seq.Lifespan = how.Repetition
+	}
+	s.Add(seq)
 }
 
 func (s *Scene) Add(newSetter Change) {
