@@ -4,8 +4,8 @@ import (
 	"time"
 )
 
-// Lifespan defines the behavior of the transformation beyond the base duration, e.g. repeat, yoyo.
-type Lifespan func(now time.Duration, span time.Duration) time.Duration
+// Defines the behavior of the transformation beyond the base duration, e.g. repeat, yoyo.
+type RepetitionFunction func(now time.Duration, span time.Duration) time.Duration
 
 func Once(now time.Duration, span time.Duration) time.Duration {
 	if now > span {
@@ -27,7 +27,7 @@ func Repeat(now time.Duration, span time.Duration) time.Duration {
 func YoYo(now time.Duration, span time.Duration) time.Duration {
 	reminder := now % span
 	whole := now / span
-	if 0 == whole % 2 {
+	if 0 == whole%2 {
 		return reminder
 	} else {
 		return span - reminder

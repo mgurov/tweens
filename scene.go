@@ -8,16 +8,19 @@ type Scene struct {
 	changes []Change
 }
 
-func (s *Scene) AddTransition(what Transition, how How) {
-	seq := NewSequence(&Step{What: what, Duration: how.Duration, Easing: how.Easing})
-	if nil != how.Repetition {
-		seq.Lifespan = how.Repetition
-	}
-	s.Add(seq)
+// Changes progress over the time from the moment zero which is normally when the Scene has started
+type Change interface {
+	Progress(tick time.Duration)
 }
 
 func (s *Scene) Add(newSetter Change) {
 	s.changes = append(s.changes, newSetter)
+}
+
+func (s *Scene) AddNewSequence(steps ...*Step) *Sequence {
+	sequence := NewSequence(steps...)
+	s.Add(sequence)
+	return sequence
 }
 
 // Sets the timestamp
@@ -43,8 +46,8 @@ func (s *Scene) RunUntilStopped(tickPrecision time.Duration, quit chan bool) {
 	for {
 		select {
 		case now := <-ticker.C:
-		//TODO: report as a bug to https://github.com/go-lang-plugin-org/go-lang-idea-plugin/issues?q=is%3Aissue+label%3A%22type+inference%22+is%3Aopen
-		// I mean now := range time.Tick(precision)
+			//TODO: report as a bug to https://github.com/go-lang-plugin-org/go-lang-idea-plugin/issues?q=is%3Aissue+label%3A%22type+inference%22+is%3Aopen
+			// I mean now := range time.Tick(precision)
 			s.Set(now.Sub(startTime))
 		case <-quit:
 			ticker.Stop()

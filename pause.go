@@ -5,7 +5,6 @@ import (
 )
 
 func Pause(duration time.Duration) *Step {
-	//TODO: or maybe do What by default nothing?
 	return &Step{What: pause{}, Duration: duration}
 }
 

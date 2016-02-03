@@ -6,17 +6,17 @@ import (
 
 type Sequence struct {
 	Steps            []*Step
-	Lifespan         Lifespan
+	Repetition       RepetitionFunction
 	currentStepIndex int
 	duration         time.Duration
 }
 
 func NewSequence(steps ...*Step) *Sequence {
 	s := &Sequence{
-		Steps: steps,
+		Steps:            steps,
 		currentStepIndex: -1,
-		Lifespan: Once,
-		duration: prepareSteps(steps),
+		Repetition:       Once,
+		duration:         prepareSteps(steps),
 	}
 
 	return s
@@ -24,14 +24,14 @@ func NewSequence(steps ...*Step) *Sequence {
 
 func (s *Sequence) YoYo() *Sequence {
 
-	s.Lifespan = YoYo
+	s.Repetition = YoYo
 
 	return s
 }
 
 func (s *Sequence) Repeat() *Sequence {
 
-	s.Lifespan = Repeat
+	s.Repetition = Repeat
 
 	return s
 }
@@ -43,7 +43,7 @@ func (s *Sequence) Progress(tick time.Duration) {
 	}
 
 	if tick > s.duration && s.duration > 0 {
-		tick = s.Lifespan(tick, s.duration)
+		tick = s.Repetition(tick, s.duration)
 	}
 
 	step := s.findStep(tick)
@@ -60,56 +60,6 @@ func (s *Sequence) Progress(tick time.Duration) {
 	}
 
 	step.apply(completed)
-}
-
-type cursor struct {
-	*Sequence
-	ascending bool
-}
-
-func (c *cursor) isEndOfSlots() bool {
-	return c.currentStepIndex >= len(c.Steps) || c.currentStepIndex < 0
-}
-
-func (c *cursor) moveNextSlot() {
-	if (c.ascending) {
-		c.currentStepIndex++
-	} else {
-		c.currentStepIndex--
-	}
-}
-
-func (c *cursor) currentSlot() *Step {
-	if (c.isEndOfSlots()) {
-		return nil
-	} else {
-		return c.Steps[c.currentStepIndex]
-	}
-}
-
-func (c *cursor) findSlot(tick time.Duration) *Step {
-
-	var completionValueForPassedTicks float64
-	if c.ascending {
-		completionValueForPassedTicks = fullyComplete
-	} else {
-		completionValueForPassedTicks = atStart
-	}
-
-	for ;; {
-		step := c.currentSlot();
-		if nil != step {
-			if step.covers(tick) {
-				return step
-			} else {
-				step.apply(completionValueForPassedTicks)
-			}
-		}
-		c.moveNextSlot()
-		if c.isEndOfSlots() {
-			return nil
-		}
-	}
 }
 
 func (s *Sequence) findStep(tick time.Duration) *Step {
@@ -132,6 +82,56 @@ func (s *Sequence) findStep(tick time.Duration) *Step {
 	cur := cursor{Sequence: s, ascending: ascending}
 	return cur.findSlot(tick)
 
+}
+
+type cursor struct {
+	*Sequence
+	ascending bool
+}
+
+func (c *cursor) isEndOfSlots() bool {
+	return c.currentStepIndex >= len(c.Steps) || c.currentStepIndex < 0
+}
+
+func (c *cursor) moveNextSlot() {
+	if c.ascending {
+		c.currentStepIndex++
+	} else {
+		c.currentStepIndex--
+	}
+}
+
+func (c *cursor) currentSlot() *Step {
+	if c.isEndOfSlots() {
+		return nil
+	} else {
+		return c.Steps[c.currentStepIndex]
+	}
+}
+
+func (c *cursor) findSlot(tick time.Duration) *Step {
+
+	var completionValueForPassedTicks float64
+	if c.ascending {
+		completionValueForPassedTicks = fullyComplete
+	} else {
+		completionValueForPassedTicks = atStart
+	}
+
+	for {
+		step := c.currentSlot()
+		if nil != step {
+			if step.covers(tick) {
+				return step
+			} else {
+				step.apply(completionValueForPassedTicks)
+			}
+		}
+		c.moveNextSlot()
+		if c.isEndOfSlots() {
+			return nil
+		}
+	}
 }
 
 const fullyComplete float64 = 1.0

@@ -14,7 +14,7 @@ func ExampleSimplest() {
 
 	scene := Scene{}
 
-	scene.AddTransition(MoveTo2(&s, 100, -100), How{Duration: time.Duration(5) * time.Second})
+	scene.AddNewSequence(&Step{What: MoveTo2(&s, 100, -100), Duration: 5 * time.Second})
 
 	execute(&scene, 6, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -36,7 +36,7 @@ func ExampleTinyStep() {
 
 	scene := Scene{}
 
-	scene.AddTransition(MoveTo2(&s, 100, 1), How{Duration: time.Duration(4) * time.Second})
+	scene.AddNewSequence(&Step{What: MoveTo2(&s, 100, 1), Duration: 4 * time.Second})
 
 	execute(&scene, 6, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -58,7 +58,7 @@ func ExampleNegativeStepsIgnored() {
 
 	scene := Scene{}
 
-	scene.AddTransition(MoveTo2(&s, 100, 1), How{Duration: time.Duration(4) * time.Second})
+	scene.AddNewSequence(&Step{What: MoveTo2(&s, 100, 1), Duration: 4 * time.Second})
 
 	scene.Set(time.Duration(-1) * time.Second)
 
@@ -74,7 +74,7 @@ func ExampleZeroDuration() {
 
 	scene := Scene{}
 
-	scene.AddTransition(MoveTo2(&s, 100, 1), How{Duration: time.Duration(0)})
+	scene.AddNewSequence(&Step{What: MoveTo2(&s, 100, 1), Duration: 0})
 
 	execute(&scene, 2, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -92,7 +92,7 @@ func ExampleEaseInQuad() {
 
 	scene := Scene{}
 
-	scene.AddTransition(MoveTo2(&s, 100, -100), How{Duration: time.Duration(5) * time.Second, Easing: EaseInQuad})
+	scene.AddNewSequence(&Step{What: MoveTo2(&s, 100, -100), Duration: 5 * time.Second, Easing: EaseInQuad})
 
 	execute(&scene, 6, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -114,7 +114,9 @@ func ExampleRepeat() {
 
 	scene := Scene{}
 
-	scene.AddTransition(MoveTo2(&s, 100, -100), How{Duration: time.Duration(5) * time.Second, Repetition: Repeat})
+	scene.AddNewSequence(
+		&Step{What: MoveTo2(&s, 100, -100), Duration: 5 * time.Second},
+	).Repeat()
 
 	execute(&scene, 11, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -141,7 +143,7 @@ func ExampleYoYo() {
 
 	scene := Scene{}
 
-	scene.AddTransition(MoveTo2(&s, 100, -100), How{Duration: time.Duration(5) * time.Second, Repetition: YoYo})
+	scene.AddNewSequence(&Step{What: MoveTo2(&s, 100, -100), Duration: 5 * time.Second}).YoYo()
 
 	execute(&scene, 11, func(tick int) {
 		fmt.Println(s.x, s.y)
@@ -168,12 +170,10 @@ func ExampleSequence() {
 
 	scene := Scene{}
 
-	sequence := NewSequence(
+	scene.AddNewSequence(
 		&Step{What: MoveTo2(&s, 100, -100), Duration: time.Duration(5) * time.Second},
 		&Step{What: MoveTo2(&s, -100, 100), Duration: time.Duration(10) * time.Second},
 	)
-
-	scene.Add(sequence)
 
 	execute(&scene, 17, func(tick int) {
 		fmt.Println(s.x, s.y)

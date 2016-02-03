@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	Title = "Tween demo"
-	Width = 400
+	Title  = "Tween demo"
+	Width  = 400
 	Height = 400
 )
 
@@ -40,34 +40,42 @@ func main() {
 	runtime.LockOSThread()
 
 	scene := tweens.Scene{}
-	scene.AddTransition(onceBox.moveTo(400, 400), tweens.How{10 * time.Second, tweens.EaseInOutBounce, tweens.Once})
-	scene.AddTransition(repeatBox.moveTo(0, 200), tweens.How{3 * time.Second, tweens.EaseOutQuad, tweens.Repeat})
-	scene.AddTransition(yoyoBox.moveTo(200, 0), tweens.How{3 * time.Second, tweens.EaseInQuad, tweens.YoYo})
 
-	scene.Add(
-		tweens.NewSequence(
-			tweens.Pause(4 * time.Second),
-			&tweens.Step{What: onceBox.resize(400, 400), Duration: 20 * time.Second},
-		).YoYo())
+	scene.AddNewSequence(
+		&tweens.Step{What: onceBox.moveTo(400, 400), Duration: 10 * time.Second, Easing: tweens.EaseInOutBounce},
+	)
 
-	scene.Add(tweens.NewSequence(
+	scene.AddNewSequence(
+		&tweens.Step{What: repeatBox.moveTo(0, 200), Duration: 3 * time.Second, Easing: tweens.EaseOutQuad},
+	).Repeat()
+
+	scene.AddNewSequence(
+		&tweens.Step{What: yoyoBox.moveTo(200, 0), Duration: 3 * time.Second, Easing: tweens.EaseInQuad},
+	).YoYo()
+
+	scene.AddNewSequence(
+		tweens.Pause(4*time.Second),
+		&tweens.Step{What: onceBox.resize(400, 400), Duration: 20 * time.Second},
+	).YoYo()
+
+	scene.AddNewSequence(
 		&tweens.Step{What: wayPointsBox.moveTo(200, 200), Duration: 3 * time.Second},
 		&tweens.Step{What: wayPointsBox.moveTo(200, 0), Duration: 2 * time.Second},
 		&tweens.Step{What: wayPointsBox.moveTo(0, 200), Duration: 1 * time.Second},
-	).Repeat())
+	).Repeat()
 
-	scene.Add(tweens.NewSequence(
+	scene.AddNewSequence(
 		&tweens.Step{What: arrow.rotate(-180), Duration: 2 * time.Second, Easing: tweens.EaseOutBounce},
 		&tweens.Step{What: arrow.rotate(0), Duration: 2 * time.Second},
-	).Repeat())
+	).Repeat()
 
 	arrowLegTraversalDuration := 5 * time.Second
-	scene.Add(tweens.NewSequence(
+	scene.AddNewSequence(
 		&tweens.Step{What: arrow.moveTo(300, 150), Duration: arrowLegTraversalDuration},
 		&tweens.Step{What: arrow.moveTo(300, 300), Duration: arrowLegTraversalDuration},
 		&tweens.Step{What: arrow.moveTo(150, 300), Duration: arrowLegTraversalDuration},
 		&tweens.Step{What: arrow.moveTo(150, 150), Duration: arrowLegTraversalDuration},
-	).Repeat())
+	).Repeat()
 
 	// set to true for the experimental self-propelled mode where the scene gets updated in the backrgound
 	// with a given frequence thus decoupling tweens from the GL drawing
@@ -85,9 +93,9 @@ func main() {
 	now := time.Now()
 
 	for !window.ShouldClose() {
-		if (!runAsync) {
+		if !runAsync {
 			newNow := time.Now()
-			delta := newNow.Sub(now);
+			delta := newNow.Sub(now)
 			scene.Set(delta)
 		}
 		drawScene()
@@ -129,11 +137,11 @@ func drawScene() {
 
 type Box struct {
 	// location of center
-	X       float64
-	Y       float64
+	X float64
+	Y float64
 	// dimension
-	Width   float64
-	Height  float64
+	Width  float64
+	Height float64
 	// color
 	R, G, B uint8
 }
@@ -141,7 +149,7 @@ type Box struct {
 func (b Box) Draw() {
 	w2 := b.Width / 2
 	h2 := b.Height / 2
-	gl.Color4f(float32(b.R) / 255.0, float32(b.G) / 255.0, float32(b.B) / 255.0, 0)
+	gl.Color4f(float32(b.R)/255.0, float32(b.G)/255.0, float32(b.B)/255.0, 0)
 
 	gl.PushMatrix()
 	gl.Translated(b.X, b.Y, 0)
@@ -193,7 +201,7 @@ type Arrow struct {
 func (a Arrow) Draw() {
 	w2 := a.Width / 2
 	h2 := a.Height / 2
-	gl.Color4f(float32(a.R) / 255.0, float32(a.G) / 255.0, float32(a.B) / 255.0, 0)
+	gl.Color4f(float32(a.R)/255.0, float32(a.G)/255.0, float32(a.B)/255.0, 0)
 
 	gl.PushMatrix()
 	gl.Translated(a.X, a.Y, 0)
@@ -219,8 +227,8 @@ type rotator struct {
 
 func (r rotator) Start() tweens.TransitionCompletionFunction {
 	return tweens.FunctionalAccessor(
-		func() (currentState []float64) {return []float64{r.angled.Angle}},
-		func(newState []float64) {r.angled.Angle = newState[0]},
+		func() (currentState []float64) { return []float64{r.angled.Angle} },
+		func(newState []float64) { r.angled.Angle = newState[0] },
 		r.target,
 	)
 }
