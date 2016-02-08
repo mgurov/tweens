@@ -44,6 +44,10 @@ func main() {
 	scene.AddNewSequence(
 		&tweens.Step{What: onceBox.moveTo(400, 400), Duration: 10 * time.Second, Easing: tweens.EaseInOutBounce},
 	)
+	scene.AddNewSequence(
+		&tweens.Step{What: onceBox.color(0, 255, 0), Duration: 5 * time.Second, Easing: tweens.EaseOutQuad},
+		&tweens.Step{What: onceBox.color(0, 0, 255), Duration: 5 * time.Second, Easing: tweens.EaseOutQuad},
+	).Repeat()
 
 	scene.AddNewSequence(
 		&tweens.Step{What: repeatBox.moveTo(0, 200), Duration: 3 * time.Second, Easing: tweens.EaseOutQuad},
@@ -179,6 +183,10 @@ func (b *Box) resize(w, h float64) tweens.Transition {
 	return tweens.LazyAccessor(&sizeAccessor{b}, w, h)
 }
 
+func (b *Box) color(red, green, blue uint8) tweens.Transition {
+	return tweens.LazyAccessor(&colorAccessor{b}, float64(red), float64(green), float64(blue))
+}
+
 type sizeAccessor struct {
 	subject *Box
 }
@@ -190,6 +198,20 @@ func (sa *sizeAccessor) Set(size []float64) {
 
 func (sa *sizeAccessor) Get() []float64 {
 	return []float64{sa.subject.Width, sa.subject.Height}
+}
+
+type colorAccessor struct {
+	subject *Box
+}
+
+func (ca *colorAccessor) Set(color []float64) {
+	ca.subject.R = uint8(color[0])
+	ca.subject.G = uint8(color[1])
+	ca.subject.B = uint8(color[2])
+}
+
+func (ca *colorAccessor) Get() []float64 {
+	return []float64{float64(ca.subject.R), float64(ca.subject.G), float64(ca.subject.B)}
 }
 
 type Arrow struct {
