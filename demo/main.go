@@ -84,7 +84,7 @@ func main() {
 	// set to true for the experimental self-propelled mode where the scene gets updated in the backrgound
 	// with a given frequence thus decoupling tweens from the GL drawing
 	// if there are advantages going this way we'll have to check the synchronization question
-	runAsync := true
+	runAsync := false
 
 	if runAsync {
 		tweener := scene.RunBackground(10 * time.Millisecond)
