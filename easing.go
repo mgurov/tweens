@@ -4,6 +4,7 @@ import (
 	"math"
 )
 
+//Easing function eases completed in the range [0.0:1.0], returned easing is expected to be in the same range [0.0:1.0]
 type Easing func(completed float64) float64
 
 func Linear(completed float64) float64 {
