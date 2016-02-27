@@ -268,7 +268,6 @@ func ExampleSequenceWithStepEasing() {
 
 	scene := Scene{}
 
-	//TODO: repeat and such on the sequence.
 	sequence := NewSequence(
 		&Step{What: MoveTo2(&s, 100, -100), Duration: time.Duration(5) * time.Second, Easing: EaseInQuad},
 		&Step{What: MoveTo2(&s, -100, 100), Duration: time.Duration(10) * time.Second},
