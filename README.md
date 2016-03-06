@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/mgurov/tweens.svg?branch=master)](https://travis-ci.org/mgurov/tweens)
+
 ## Nomenclature 
 
 * `Accessible` interface hides the actual object properties to be changed by the tweened transition
@@ -8,4 +10,4 @@ at the right moment when participating in a sequence
 
 ## TODO
 
-* ci
+* ci for demo
