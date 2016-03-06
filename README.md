@@ -8,7 +8,4 @@ at the right moment when participating in a sequence
 
 ## TODO
 
-* docs
-* manager/timeline to offload the caller (demo)
-* resize / color
 * ci
