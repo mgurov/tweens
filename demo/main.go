@@ -6,6 +6,7 @@ import (
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
 
+	"fmt"
 	"github.com/mgurov/tweens"
 	"time"
 )
@@ -42,43 +43,43 @@ func main() {
 	scene := tweens.Scene{}
 
 	scene.AddNewSequence(
-		&tweens.Step{What: onceBox.moveTo(400, 400), Duration: 10 * time.Second, Easing: tweens.EaseInOutBounce},
+		&tweens.Step{What: tweens.Move(&onceBox, 400, 400), Duration: 10 * time.Second, Easing: tweens.EaseInOutBounce},
 	)
 	scene.AddNewSequence(
-		&tweens.Step{What: onceBox.color(0, 255, 0), Duration: 5 * time.Second, Easing: tweens.EaseOutQuad},
-		&tweens.Step{What: onceBox.color(0, 0, 255), Duration: 5 * time.Second, Easing: tweens.EaseOutQuad},
+		&tweens.Step{What: tweens.Colorize(&onceBox, 0, 255, 0), Duration: 5 * time.Second, Easing: tweens.EaseOutQuad},
+		&tweens.Step{What: tweens.Colorize(&onceBox, 0, 0, 255), Duration: 5 * time.Second, Easing: tweens.EaseOutQuad},
 	).Repeat()
 
 	scene.AddNewSequence(
-		&tweens.Step{What: repeatBox.moveTo(0, 200), Duration: 3 * time.Second, Easing: tweens.EaseOutQuad},
+		&tweens.Step{What: tweens.Move(&repeatBox, 0, 200), Duration: 3 * time.Second, Easing: tweens.EaseOutQuad},
 	).Repeat()
 
 	scene.AddNewSequence(
-		&tweens.Step{What: yoyoBox.moveTo(200, 0), Duration: 3 * time.Second, Easing: tweens.EaseInQuad},
+		&tweens.Step{What: tweens.Move(&yoyoBox, 200, 0), Duration: 3 * time.Second, Easing: tweens.EaseInQuad},
 	).YoYo()
 
 	scene.AddNewSequence(
 		tweens.Pause(4*time.Second),
-		&tweens.Step{What: onceBox.resize(400, 400), Duration: 20 * time.Second},
+		&tweens.Step{What: tweens.Resize(&onceBox, 400, 400), Duration: 20 * time.Second},
 	).YoYo()
 
 	scene.AddNewSequence(
-		&tweens.Step{What: wayPointsBox.moveTo(200, 200), Duration: 3 * time.Second},
-		&tweens.Step{What: wayPointsBox.moveTo(200, 0), Duration: 2 * time.Second},
-		&tweens.Step{What: wayPointsBox.moveTo(0, 200), Duration: 1 * time.Second},
+		&tweens.Step{What: tweens.Move(&wayPointsBox, 200, 200), Duration: 3 * time.Second},
+		&tweens.Step{What: tweens.Move(&wayPointsBox, 200, 0), Duration: 2 * time.Second},
+		&tweens.Step{What: tweens.Move(&wayPointsBox, 0, 200), Duration: 1 * time.Second},
 	).Repeat()
 
 	scene.AddNewSequence(
-		&tweens.Step{What: arrow.rotate(-180), Duration: 2 * time.Second, Easing: tweens.EaseOutBounce},
-		&tweens.Step{What: arrow.rotate(0), Duration: 2 * time.Second},
+		&tweens.Step{What: tweens.Rotate(&arrow, -180), Duration: 2 * time.Second, Easing: tweens.EaseOutBounce},
+		&tweens.Step{What: tweens.Rotate(&arrow, 0), Duration: 2 * time.Second},
 	).Repeat()
 
 	arrowLegTraversalDuration := 5 * time.Second
 	scene.AddNewSequence(
-		&tweens.Step{What: arrow.moveTo(300, 150), Duration: arrowLegTraversalDuration},
-		&tweens.Step{What: arrow.moveTo(300, 300), Duration: arrowLegTraversalDuration},
-		&tweens.Step{What: arrow.moveTo(150, 300), Duration: arrowLegTraversalDuration},
-		&tweens.Step{What: arrow.moveTo(150, 150), Duration: arrowLegTraversalDuration},
+		&tweens.Step{What: tweens.Move(&arrow, 300, 150), Duration: arrowLegTraversalDuration},
+		&tweens.Step{What: tweens.Move(&arrow, 300, 300), Duration: arrowLegTraversalDuration},
+		&tweens.Step{What: tweens.Move(&arrow, 150, 300), Duration: arrowLegTraversalDuration},
+		&tweens.Step{What: tweens.Move(&arrow, 150, 150), Duration: arrowLegTraversalDuration},
 	).Repeat()
 
 	// set to true for the experimental self-propelled mode where the scene gets updated in the backrgound
@@ -166,52 +167,44 @@ func (b Box) Draw() {
 	gl.PopMatrix()
 }
 
-func (b *Box) Set(position []float64) {
-	b.X = position[0]
-	b.Y = position[1]
+func (b *Box) SetValues(aspect tweens.TweenAspect, newValues []float64) {
+	switch aspect {
+	case tweens.AspectPosition:
+		b.X = newValues[0]
+		b.Y = newValues[1]
+	case tweens.AspectSize:
+		b.Height = newValues[0]
+		b.Width = newValues[1]
+	case tweens.AspectColor:
+		b.R = uint8(newValues[0])
+		b.G = uint8(newValues[1])
+		b.B = uint8(newValues[2])
+	default:
+		panic(fmt.Sprint("unknown tween aspect ", aspect))
+	}
 }
 
-func (b *Box) Get() []float64 {
-	return []float64{b.X, b.Y}
-}
-
-func (b *Box) moveTo(x, y float64) tweens.Transition {
-	return tweens.LazyAccessor(b, x, y)
-}
-
-func (b *Box) resize(w, h float64) tweens.Transition {
-	return tweens.LazyAccessor(&sizeAccessor{b}, w, h)
-}
-
-func (b *Box) color(red, green, blue uint8) tweens.Transition {
-	return tweens.LazyAccessor(&colorAccessor{b}, float64(red), float64(green), float64(blue))
-}
-
-type sizeAccessor struct {
-	subject *Box
-}
-
-func (sa *sizeAccessor) Set(size []float64) {
-	sa.subject.Height = size[0]
-	sa.subject.Width = size[1]
-}
-
-func (sa *sizeAccessor) Get() []float64 {
-	return []float64{sa.subject.Width, sa.subject.Height}
-}
-
-type colorAccessor struct {
-	subject *Box
-}
-
-func (ca *colorAccessor) Set(color []float64) {
-	ca.subject.R = uint8(color[0])
-	ca.subject.G = uint8(color[1])
-	ca.subject.B = uint8(color[2])
-}
-
-func (ca *colorAccessor) Get() []float64 {
-	return []float64{float64(ca.subject.R), float64(ca.subject.G), float64(ca.subject.B)}
+func (b *Box) GetValues(aspect tweens.TweenAspect) []float64 {
+	switch aspect {
+	case tweens.AspectPosition:
+		return []float64{
+			b.X,
+			b.Y,
+		}
+	case tweens.AspectSize:
+		return []float64{
+			b.Height,
+			b.Width,
+		}
+	case tweens.AspectColor:
+		return []float64{
+			float64(b.R),
+			float64(b.G),
+			float64(b.B),
+		}
+	default:
+		panic(fmt.Sprint("unknown tween aspect ", aspect))
+	}
 }
 
 type Arrow struct {
@@ -238,19 +231,18 @@ func (a Arrow) Draw() {
 	gl.PopMatrix()
 }
 
-func (a *Arrow) rotate(toAngle float64) rotator {
-	return rotator{toAngle, a}
+func (a *Arrow) SetValues(aspect tweens.TweenAspect, newValues []float64) {
+	if aspect == tweens.AspectDirection {
+		a.Angle = newValues[0]
+	} else {
+		a.Box.SetValues(aspect, newValues)
+	}
 }
 
-type rotator struct {
-	target float64
-	angled *Arrow
-}
-
-func (r rotator) Start() tweens.TransitionCompletionFunction {
-	return tweens.FunctionalAccessor(
-		func() (currentState []float64) { return []float64{r.angled.Angle} },
-		func(newState []float64) { r.angled.Angle = newState[0] },
-		r.target,
-	)
+func (a *Arrow) GetValues(aspect tweens.TweenAspect) []float64 {
+	if aspect == tweens.AspectDirection {
+		return []float64{a.Angle}
+	} else {
+		return a.Box.GetValues(aspect)
+	}
 }
