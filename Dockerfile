@@ -2,8 +2,6 @@ FROM golang:latest
 
 RUN apt-get update
 
-RUN go get -d github.com/go-gl/gl/v2.1/gl github.com/go-gl/glfw/v3.1/glfw
-
 RUN apt-get install -y libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev libgl1-mesa-dev
 
 RUN go get github.com/go-gl/gl/v2.1/gl github.com/go-gl/glfw/v3.1/glfw
