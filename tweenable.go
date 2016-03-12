@@ -8,6 +8,8 @@ type Tweenable interface {
 	SetValues(aspect TweenAspect, newValues []float64)
 }
 
+// Predefined tweenable aspects, for demonstration and convenience purpose
+// One can use own constants mixing or overlapping with these
 const (
 	AspectPosition TweenAspect = iota
 	AspectSize
@@ -16,19 +18,19 @@ const (
 )
 
 func Move(subject Tweenable, x, y float64) Transition {
-	return newTweenableAccessor(subject, AspectPosition, x, y)
+	return NewTweenableAccessor(subject, AspectPosition, x, y)
 }
 
 func Resize(subject Tweenable, h, w float64) Transition {
-	return newTweenableAccessor(subject, AspectSize, h, w)
+	return NewTweenableAccessor(subject, AspectSize, h, w)
 }
 
 func Rotate(subject Tweenable, angle float64) Transition {
-	return newTweenableAccessor(subject, AspectDirection, angle)
+	return NewTweenableAccessor(subject, AspectDirection, angle)
 }
 
 func Colorize(subject Tweenable, r, g, b int) Transition {
-	return newTweenableAccessor(subject, AspectColor, float64(r), float64(g), float64(b))
+	return NewTweenableAccessor(subject, AspectColor, float64(r), float64(g), float64(b))
 }
 
 type tweenableAccessor struct {
@@ -36,7 +38,7 @@ type tweenableAccessor struct {
 	aspect  TweenAspect
 }
 
-func newTweenableAccessor(subject Tweenable, aspect TweenAspect, targets ...float64) Transition {
+func NewTweenableAccessor(subject Tweenable, aspect TweenAspect, targets ...float64) Transition {
 	return LazyAccessor(&tweenableAccessor{subject, aspect}, targets...)
 }
 

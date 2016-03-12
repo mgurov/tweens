@@ -12,9 +12,10 @@ import (
 )
 
 const (
-	Title  = "Tween demo"
-	Width  = 400
-	Height = 400
+	Title                  = "Tween demo"
+	Width                  = 400
+	Height                 = 400
+	CustomTweenAspectColor = tweens.AspectDirection + 1
 )
 
 func main() {
@@ -46,8 +47,8 @@ func main() {
 		&tweens.Step{What: tweens.Move(&onceBox, 400, 400), Duration: 10 * time.Second, Easing: tweens.EaseInOutBounce},
 	)
 	scene.AddNewSequence(
-		&tweens.Step{What: tweens.Colorize(&onceBox, 0, 255, 0), Duration: 5 * time.Second, Easing: tweens.EaseOutQuad},
-		&tweens.Step{What: tweens.Colorize(&onceBox, 0, 0, 255), Duration: 5 * time.Second, Easing: tweens.EaseOutQuad},
+		&tweens.Step{What: CustomColorize(&onceBox, 0, 255, 0), Duration: 5 * time.Second, Easing: tweens.EaseOutQuad},
+		&tweens.Step{What: CustomColorize(&onceBox, 0, 0, 255), Duration: 5 * time.Second, Easing: tweens.EaseOutQuad},
 	).Repeat()
 
 	scene.AddNewSequence(
@@ -147,6 +148,7 @@ type Box struct {
 	// dimension
 	Width  float64
 	Height float64
+	Scale  float64
 	// color
 	R, G, B uint8
 }
@@ -175,7 +177,7 @@ func (b *Box) SetValues(aspect tweens.TweenAspect, newValues []float64) {
 	case tweens.AspectSize:
 		b.Height = newValues[0]
 		b.Width = newValues[1]
-	case tweens.AspectColor:
+	case CustomTweenAspectColor:
 		b.R = uint8(newValues[0])
 		b.G = uint8(newValues[1])
 		b.B = uint8(newValues[2])
@@ -196,7 +198,7 @@ func (b *Box) GetValues(aspect tweens.TweenAspect) []float64 {
 			b.Height,
 			b.Width,
 		}
-	case tweens.AspectColor:
+	case CustomTweenAspectColor:
 		return []float64{
 			float64(b.R),
 			float64(b.G),
@@ -245,4 +247,8 @@ func (a *Arrow) GetValues(aspect tweens.TweenAspect) []float64 {
 	} else {
 		return a.Box.GetValues(aspect)
 	}
+}
+
+func CustomColorize(subject tweens.Tweenable, r, g, b int) tweens.Transition {
+	return tweens.NewTweenableAccessor(subject, CustomTweenAspectColor, float64(r), float64(g), float64(b))
 }
