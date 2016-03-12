@@ -103,7 +103,7 @@ func main() {
 			scene.Set(delta)
 		}
 		drawScene()
-		window.SwapBuffers()
+		window.SwapBufferz()
 		glfw.PollEvents()
 	}
 }
