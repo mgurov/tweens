@@ -1,2 +1,6 @@
-language: go
-script: go test -v .
+sudo: required
+
+services:
+  - docker
+
+script: make dbuild dtest
